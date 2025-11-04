@@ -1,0 +1,21 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="icon/launcher.png">launcher/icon/launcher.png</file>
+        <file alias="icon/ai.png.png">launcher/icon/ai.png</file>
+        <file alias="icon/close.png">launcher/icon/close.png</file>
+        <file alias="icon/default.png">launcher/icon/default.png</file>
+        <file alias="icon/delete.png">launcher/icon/delete.png</file>
+        <file alias="icon/downLoad.png">launcher/icon/downLoad.png</file>
+        <file alias="icon/ffmpegHelper.png">launcher/icon/ffmpegHelper.png</file>
+        
+        <file alias="icon/minimize.png">launcher/icon/minimize.png</file>
+        <file alias="icon/mo.png">launcher/icon/mo.png</file>
+        <file alias="icon/openDir.png">launcher/icon/openDir.png</file>
+        <file alias="icon/setting.png">launcher/icon/setting.png</file>
+        <file alias="icon/Thinkbox.png">launcher/icon/Thinkbox.png</file>
+        <file alias="icon/tsvn-logo.png">launcher/icon/tsvn-logo.png</file>
+        <file alias="icon/update.png">launcher/icon/update.png</file>
+        <file alias="icon/upload.png">launcher/icon/upload.png</file>
+        <file alias="icon/virus.png">launcher/icon/virus.png</file>
+    </qresource>
+</RCC>

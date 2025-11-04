@@ -1,0 +1,96 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "clean_build_except_install_dir",
+			"type": "shell",
+			"command": "rmdir /s /q build & mkdir build",
+			"problemMatcher": [],
+			"detail": "删除 build 文件夹及其所有内容，然后重建 build 文件夹"
+		},
+		{
+			"label": "cmake_configure",
+			"type": "shell",
+			"command": "cmake",
+			"args": [
+				"-S",
+				".",
+				"-B",
+				"build",
+				"-G",
+				"MinGW Makefiles"
+			],
+			"problemMatcher": [],
+			"dependsOn": [
+				"clean_build_except_install_dir"
+			]
+		},
+		{
+			"label": "cmake_rebuild",
+			"type": "shell",
+			"command": "cmake",
+			"args": [
+				"--build",
+				"build"
+			],
+			"problemMatcher": [],
+			"dependsOn": [
+				"cmake_configure"
+			]
+		},
+		{
+			"label": "cmake_rebuild_install",
+			"type": "shell",
+			"command": "cmake",
+			"args": [
+				"--install",
+				"build"
+			],
+			"problemMatcher": [],
+			"dependsOn": [
+				"cmake_rebuild"
+			]
+		},
+		// 拷贝cmake_build构建的文件到install_dir/bin下
+		{
+			"label": "cmake_build_copy_to_bin",
+			"type": "shell",
+			"command": "xcopy",
+			"args": [
+				"/Y",
+				"build\\MadOnionBox.exe",
+				"build\\install_dir\\bin\\"
+			],
+			"problemMatcher": [],
+			"dependsOn": [
+				"cmake_build"
+			]
+		},
+		{
+			"label": "cmake_build",
+			"type": "shell",
+			"command": "cmake",
+			"args": [
+				"--build",
+				"build"
+			],
+			"problemMatcher": [],
+			"dependsOn": [
+
+			]
+		},
+		{
+			"label": "cmake_install",
+			"type": "shell",
+			"command": "cmake",
+			"args": [
+				"--install",
+				"build"
+			],
+			"problemMatcher": [],
+			"dependsOn": [
+				"cmake_build"
+			]
+		},
+	]
+}
