@@ -1,96 +1,186 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"label": "clean_build_except_install_dir",
-			"type": "shell",
-			"command": "rmdir /s /q build & mkdir build",
-			"problemMatcher": [],
-			"detail": "删除 build 文件夹及其所有内容，然后重建 build 文件夹"
-		},
-		{
-			"label": "cmake_configure",
-			"type": "shell",
-			"command": "cmake",
-			"args": [
-				"-S",
-				".",
-				"-B",
-				"build",
-				"-G",
-				"MinGW Makefiles"
-			],
-			"problemMatcher": [],
-			"dependsOn": [
-				"clean_build_except_install_dir"
-			]
-		},
-		{
-			"label": "cmake_rebuild",
-			"type": "shell",
-			"command": "cmake",
-			"args": [
-				"--build",
-				"build"
-			],
-			"problemMatcher": [],
-			"dependsOn": [
-				"cmake_configure"
-			]
-		},
-		{
-			"label": "cmake_rebuild_install",
-			"type": "shell",
-			"command": "cmake",
-			"args": [
-				"--install",
-				"build"
-			],
-			"problemMatcher": [],
-			"dependsOn": [
-				"cmake_rebuild"
-			]
-		},
-		// 拷贝cmake_build构建的文件到install_dir/bin下
-		{
-			"label": "cmake_build_copy_to_bin",
-			"type": "shell",
-			"command": "xcopy",
-			"args": [
-				"/Y",
-				"build\\MadOnionBox.exe",
-				"build\\install_dir\\bin\\"
-			],
-			"problemMatcher": [],
-			"dependsOn": [
-				"cmake_build"
-			]
-		},
-		{
-			"label": "cmake_build",
-			"type": "shell",
-			"command": "cmake",
-			"args": [
-				"--build",
-				"build"
-			],
-			"problemMatcher": [],
-			"dependsOn": [
-
-			]
-		},
-		{
-			"label": "cmake_install",
-			"type": "shell",
-			"command": "cmake",
-			"args": [
-				"--install",
-				"build"
-			],
-			"problemMatcher": [],
-			"dependsOn": [
-				"cmake_build"
-			]
-		},
-	]
+  "version": "2.0.0",
+  "options": {
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "PATH": "C:\\mingw64\\bin;C:\\cmake328\\bin;C:\\QT\\6.9.2\\mingw_64\\bin;${env:PATH}"
+    }
+  },
+  "tasks": [
+    {
+      "label": "cmake: configure Debug",
+      "type": "shell",
+      "command": "C:/cmake328/bin/cmake.exe",
+      "args": [
+        "-S", "${workspaceFolder}",
+        "-B", "${workspaceFolder}/build",
+        "-G", "MinGW Makefiles",
+        "-DCMAKE_BUILD_TYPE=Debug",
+        "-DCMAKE_CXX_COMPILER=C:/mingw64/bin/g++.exe",
+        "-DCMAKE_MAKE_PROGRAM=C:/mingw64/bin/mingw32-make.exe",
+        "-DCMAKE_INSTALL_PREFIX=${workspaceFolder}/deploy",
+        "-DCMAKE_PREFIX_PATH=C:/QT/6.9.2/mingw_64",
+        "-DMOB_BUILD_MADONIONBOX=ON"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "cmake: configure Release",
+      "type": "shell",
+      "command": "C:/cmake328/bin/cmake.exe",
+      "args": [
+        "-S", "${workspaceFolder}",
+        "-B", "${workspaceFolder}/build-release",
+        "-G", "MinGW Makefiles",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DCMAKE_CXX_COMPILER=C:/mingw64/bin/g++.exe",
+        "-DCMAKE_MAKE_PROGRAM=C:/mingw64/bin/mingw32-make.exe",
+        "-DCMAKE_INSTALL_PREFIX=${workspaceFolder}/deploy",
+        "-DCMAKE_PREFIX_PATH=C:/QT/6.9.2/mingw_64",
+        "-DMOB_BUILD_MADONIONBOX=ON"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "cmake: build launcher Debug",
+      "type": "shell",
+      "command": "C:/cmake328/bin/cmake.exe",
+      "args": [
+        "--build", "${workspaceFolder}/build",
+        "--target", "launcher",
+        "--", "-j8"
+      ],
+      "dependsOn": "cmake: configure Debug",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$gcc"]
+    },
+    {
+      "label": "cmake: build launcher Release",
+      "type": "shell",
+      "command": "C:/cmake328/bin/cmake.exe",
+      "args": [
+        "--build", "${workspaceFolder}/build-release",
+        "--target", "launcher",
+        "--", "-j8"
+      ],
+      "dependsOn": "cmake: configure Release",
+      "problemMatcher": ["$gcc"]
+    },
+    {
+      "label": "cmake: build MadOnionBox Debug",
+      "type": "shell",
+      "command": "C:/cmake328/bin/cmake.exe",
+      "args": [
+        "--build", "${workspaceFolder}/build",
+        "--target", "MadOnionBox",
+        "--", "-j8"
+      ],
+      "dependsOn": "cmake: configure Debug",
+      "problemMatcher": ["$gcc"]
+    },
+    {
+      "label": "cmake: build MadOnionBox Release",
+      "type": "shell",
+      "command": "C:/cmake328/bin/cmake.exe",
+      "args": [
+        "--build", "${workspaceFolder}/build-release",
+        "--target", "MadOnionBox",
+        "--", "-j8"
+      ],
+      "dependsOn": "cmake: configure Release",
+      "problemMatcher": ["$gcc"]
+    },
+    {
+      "label": "copy: launcher Debug exe",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-Command",
+        "New-Item -ItemType Directory -Force -Path '${workspaceFolder}/deploy' | Out-Null; Copy-Item -Force '${workspaceFolder}/build/launcher/launcher.exe' '${workspaceFolder}/deploy/launcher.exe'"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "copy: MadOnionBox Debug exe",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-Command",
+        "New-Item -ItemType Directory -Force -Path '${workspaceFolder}/deploy/bin' | Out-Null; Copy-Item -Force '${workspaceFolder}/build/MoBox/MadOnionBox.exe' '${workspaceFolder}/deploy/bin/MadOnionBox.exe'"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "build and copy launcher Debug",
+      "dependsOn": [
+        "cmake: build launcher Debug",
+        "copy: launcher Debug exe"
+      ],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    },
+    {
+      "label": "build and copy MadOnionBox Debug",
+      "dependsOn": [
+        "cmake: build MadOnionBox Debug",
+        "copy: MadOnionBox Debug exe"
+      ],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    },
+    {
+      "label": "cmake: install Release",
+      "type": "shell",
+      "command": "C:/cmake328/bin/cmake.exe",
+      "args": [
+        "--install", "${workspaceFolder}/build-release",
+        "--prefix", "${workspaceFolder}/deploy"
+      ],
+      "dependsOn": "cmake: configure Release",
+      "problemMatcher": []
+    },
+    {
+      "label": "build and deploy launcher Release",
+      "dependsOn": [
+        "cmake: build launcher Release",
+        "cmake: install Release"
+      ],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    },
+    {
+      "label": "build and deploy MadOnionBox Release",
+      "dependsOn": [
+        "cmake: build MadOnionBox Release",
+        "cmake: install Release"
+      ],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    },
+    {
+      "label": "cmake: clean Debug",
+      "type": "shell",
+      "command": "C:/cmake328/bin/cmake.exe",
+      "args": [
+        "--build", "${workspaceFolder}/build",
+        "--target", "clean"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "cmake: clean Release",
+      "type": "shell",
+      "command": "C:/cmake328/bin/cmake.exe",
+      "args": [
+        "--build", "${workspaceFolder}/build-release",
+        "--target", "clean"
+      ],
+      "problemMatcher": []
+    }
+  ]
 }

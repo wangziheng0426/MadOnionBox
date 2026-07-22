@@ -1,1 +1,2 @@
-IDI_ICON1 ICON "icon/mo.ico"
+// launcher 应用程序图标（相对本文件路径）
+IDI_APP_ICON ICON "../assets/icons/mo.ico"

@@ -1,0 +1,11 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="/icons">
+        <file alias="setting.png">../assets/icons/setting.png</file>
+        <file alias="update.png">../assets/icons/update.png</file>
+        <file alias="minimize.png">../assets/icons/minimize.png</file>
+        <file alias="close.png">../assets/icons/close.png</file>
+        <file alias="default.png">../assets/icons/default.png</file>
+        <file alias="mo.png">../assets/icons/mo.png</file>
+    </qresource>
+</RCC>
