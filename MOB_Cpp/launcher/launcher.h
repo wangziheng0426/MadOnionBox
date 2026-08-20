@@ -30,7 +30,7 @@ public:
 
 private:
     // 云端更新列表地址（update.txt，INI 风格：version / packageUrl）
-    static constexpr const char *kUpdateListUrl = "http://192.168.212.225/update.txt";
+    static constexpr const char *kUpdateListUrl = "http://www.madonion.cn/download/update.txt";
     // 主程序可执行文件名
     static constexpr const char *kMadOnionBoxExeName = "madonionbox.exe";
     // 更新临时目录名（相对安装根目录）

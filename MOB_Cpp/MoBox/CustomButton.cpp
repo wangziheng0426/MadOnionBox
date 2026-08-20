@@ -54,7 +54,7 @@ void CustomButton::setupUi()
     // 下方软件名
     qlabel = new QLabel(this);
     qlabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-    qlabel->setStyleSheet(QStringLiteral("color: black;"));
+    //qlabel->setStyleSheet(QStringLiteral("color: black;"));
     qlabel->setFixedSize(56, 20);
     qlabel->move(0, 56);
 

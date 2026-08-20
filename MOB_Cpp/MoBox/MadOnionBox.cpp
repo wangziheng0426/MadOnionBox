@@ -16,6 +16,7 @@
 #include <QTextStream>
 #include <QMessageBox>
 #include <QSettings>
+#include <QSignalBlocker>
 #include <QDesktopServices>
 #include <QUrl>
 #include <QProcess>
@@ -105,9 +106,7 @@ void layoutButtonsBySoftName(const QList<CustomButton *> &buttons, QGridLayout *
     if (!grid || buttons.isEmpty() || maxCols < 1) {
         return;
     }
-
     clearGridLayout(grid);
-
     QStringList softOrder;
     QHash<QString, QList<CustomButton *>> groups;
     for (CustomButton *btn : buttons) {
@@ -251,10 +250,13 @@ void MadOnionBox::initData()
         }
     }    
     // 在线/离网只要配置读成功，都继续后续初始化
-    downLoadToolsInConfig();
-    createDccButtons();
-    createPythonScriptButtons();
-    arrangeButtons();
+    // 有异步下载：等 TaskExecutor::allFinished → onAllDownloadTasksFinished 再建按钮
+    // 无下载（离网 / 无有效地址）：不会发 allFinished，这里立刻创建按钮
+    if (!downLoadToolsInConfig()) {
+        createDccButtons();
+        createPythonScriptButtons();
+        arrangeButtons();
+    }
 }
 
 
@@ -308,24 +310,40 @@ bool MadOnionBox::loadConfigFile()
         QMessageBox::critical(this, "错误", "配置文件不存在，请检查配置文件是否存在。");
     }
     qDebug() << "配置文件加载成功。";
-    //加载所有工具箱到下来菜单
+    // 加载所有工具箱到下拉菜单；阻断信号，避免 clear/add 时覆盖 boxSetting.ini 里的上次选择
     QJsonObject dccTools = boxConfigJson.value(QStringLiteral("dccTools")).toObject();
-    for (const QString &dccToolName : dccTools.keys()) {
-        ui->comboBox_dccPlug->addItem(dccToolName);
+    const QString boxSettingPath =
+        QDir(QCoreApplication::applicationDirPath()).filePath(QStringLiteral("config/boxSetting.ini"));
+    QString lastPlug;
+    {
+        QSettings boxSetting(boxSettingPath, QSettings::IniFormat);
+        lastPlug = boxSetting.value(QStringLiteral("ui/lastDccPlug")).toString().trimmed();
+    }
+    {
+        const QSignalBlocker blocker(ui->comboBox_dccPlug);
+        ui->comboBox_dccPlug->clear();
+        for (const QString &dccToolName : dccTools.keys()) {
+            ui->comboBox_dccPlug->addItem(dccToolName);
+        }
+        // 记录项仍在列表中则恢复；否则忽略，保持默认第一项
+        const int idx = lastPlug.isEmpty() ? -1 : ui->comboBox_dccPlug->findText(lastPlug);
+        if (idx >= 0) {
+            ui->comboBox_dccPlug->setCurrentIndex(idx);
+        }
     }
     return !boxConfigJson.isEmpty();
 
 }
-// 下载配置文件中记录的工具
-void MadOnionBox::downLoadToolsInConfig()
+// 下载配置文件中记录的工具；有任务入队返回 true，否则 false
+bool MadOnionBox::downLoadToolsInConfig()
 {
     if (boxConfigJson.isEmpty()) {
         qDebug() << "配置文件为空，无法下载工具。";
-        return;
+        return false;
     }
     if (offlineMode_) {
         qDebug() << "离网模式，跳过下载工具。";
-        return;
+        return false;
     }
 
     const QString user = userName;
@@ -356,14 +374,14 @@ void MadOnionBox::downLoadToolsInConfig()
     };
 
     // pythonEnv → /python_embed（保留 URL 最后一层目录名）
-    {
-        const QJsonObject pythonEnvInfo = boxConfigJson.value(QStringLiteral("pythonEnv")).toObject();
-        const QString pyEnvUrl = pythonEnvInfo.value(QStringLiteral("url")).toString().trimmed();
-        if (!pyEnvUrl.isEmpty()) {
-            const QString localPath = QDir(appDir).filePath( QStringLiteral("python_embed"));
-            enqueueSvnDownload(pyEnvUrl, localPath, QStringLiteral("Python环境"));            
-        }
-    }
+    // {
+    //     const QJsonObject pythonEnvInfo = boxConfigJson.value(QStringLiteral("pythonEnv")).toObject();
+    //     const QString pyEnvUrl = pythonEnvInfo.value(QStringLiteral("url")).toString().trimmed();
+    //     if (!pyEnvUrl.isEmpty()) {
+    //         const QString localPath = QDir(appDir).filePath( QStringLiteral("python_embed"));
+    //         enqueueSvnDownload(pyEnvUrl, localPath, QStringLiteral("Python环境"));            
+    //     }
+    // }
 
     // dccTools → /dccTools/<工具名>，每个工具单独检出
     {
@@ -398,14 +416,15 @@ void MadOnionBox::downLoadToolsInConfig()
 
     if (enqueued == 0) {
         qDebug() << "配置中没有有效的下载地址。";
-        return;
+        return false;
     }
 
-    // 下载中：显示跑马灯、关闭窗口交互
+    // 下载中：显示跑马灯、关闭窗口交互；完成后由 onAllDownloadTasksFinished 建按钮
     setDownloadBusy(true);
     if (infoLabel) {
         infoLabel->setText(tr("正在同步工具与环境..."));
     }
+    return true;
 }
 void MadOnionBox::createDccButtons()
 {
@@ -599,6 +618,17 @@ void MadOnionBox::arrangeButtons()
 void MadOnionBox::switchToolbox()
 {
     qDebug() << "切换工具箱:" << ui->comboBox_dccPlug->currentText();
+    // 记住当前选择到 boxSetting.ini，下次打开 / 更新配置后尽量恢复
+    const QString name = ui->comboBox_dccPlug->currentText().trimmed();
+    if (!name.isEmpty()) {
+        const QString configDir =
+            QDir(QCoreApplication::applicationDirPath()).filePath(QStringLiteral("config"));
+        QDir().mkpath(configDir);
+        QSettings boxSetting(QDir(configDir).filePath(QStringLiteral("boxSetting.ini")),
+                             QSettings::IniFormat);
+        boxSetting.setValue(QStringLiteral("ui/lastDccPlug"), name);
+        boxSetting.sync();
+    }
     createDccButtons();
     createPythonScriptButtons();
     arrangeButtons();
@@ -626,10 +656,14 @@ void MadOnionBox::onDownloadTaskFinished(bool success, const QString &message)
     }
 }
 
-// 队列全部完成后：隐藏进度条并恢复交互
+// 队列全部完成后：隐藏进度条、恢复交互，再创建按钮
 void MadOnionBox::onAllDownloadTasksFinished()
 {
     setDownloadBusy(false);
+    // 下载（成功或失败）结束后再建 UI，保证本地文件已尽量同步
+    createDccButtons();
+    createPythonScriptButtons();
+    arrangeButtons();
 }
 
 void MadOnionBox::setDownloadBusy(bool busy)

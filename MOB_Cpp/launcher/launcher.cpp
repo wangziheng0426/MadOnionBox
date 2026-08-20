@@ -578,7 +578,7 @@ bool Launcher::installOrUpdateMadOnionBox()
             DeleteFileA(zipPath.c_str());
             return false;
         }
-        DeleteFileA(zipPath.c_str());
+        //DeleteFileA(zipPath.c_str());
     }
 
     if (!fileExists(madOnionBoxExe_)) {

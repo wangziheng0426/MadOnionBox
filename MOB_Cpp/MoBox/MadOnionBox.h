@@ -57,7 +57,8 @@ private:
     void setDownloadBusy(bool busy);
     
     bool loadConfigFile();
-    void downLoadToolsInConfig();
+    // 入队配置中的工具下载；返回 true 表示已异步入队（需等 allFinished 再建按钮）
+    bool downLoadToolsInConfig();
 
     
 

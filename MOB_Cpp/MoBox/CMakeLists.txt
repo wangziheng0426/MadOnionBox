@@ -34,8 +34,8 @@ file(GLOB MADONIONBOX_SOURCES CONFIGURE_DEPENDS
 
 # ---------- 可执行文件 ----------
 # qt_add_executable：正确处理 WIN32、AUTOMOC，并便于后续扩展资源/翻译
-#qt_add_executable(MadOnionBox WIN32 ${MADONIONBOX_SOURCES})
-qt_add_executable(MadOnionBox  ${MADONIONBOX_SOURCES})
+qt_add_executable(MadOnionBox WIN32 ${MADONIONBOX_SOURCES})
+#qt_add_executable(MadOnionBox  ${MADONIONBOX_SOURCES})
 target_include_directories(MadOnionBox PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${CMAKE_CURRENT_BINARY_DIR}"
